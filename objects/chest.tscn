@@ -1,0 +1,33 @@
+[gd_scene format=3 uid="uid://bc1eyelyxfjvq"]
+
+[ext_resource type="PackedScene" uid="uid://cx0acul7xa8ms" path="res://environment/Environment/FBX/Chest_Closed.fbx" id="1_closed"]
+[ext_resource type="PackedScene" uid="uid://dnuhpul0btsgw" path="res://environment/Environment/FBX/Chest_Open.fbx" id="2_open"]
+[ext_resource type="Script" uid="uid://bhlnep1uybrx5" path="res://objects/chest.gd" id="3_script"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dqdoe"]
+size = Vector3(1, 1.8242188, 1)
+
+[sub_resource type="SphereShape3D" id="SphereShape_interaction"]
+radius = 2.0
+
+[node name="Chest" type="Node3D" unique_id=176362975]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
+script = ExtResource("3_script")
+
+[node name="ClosedModel" parent="." unique_id=1765573769 instance=ExtResource("1_closed")]
+
+[node name="SolidBody" type="StaticBody3D" parent="." unique_id=184738513]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SolidBody" unique_id=24184883]
+transform = Transform3D(1.7496578, 0, 0, 0, 1, 0, 0, 0, 1.5531596, 0, 0.96163094, 0)
+shape = SubResource("BoxShape3D_dqdoe")
+
+[node name="OpenedModel" parent="." unique_id=1676454862 instance=ExtResource("2_open")]
+visible = false
+
+[node name="InteractionArea" type="Area3D" parent="." unique_id=4490493]
+collision_layer = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractionArea" unique_id=1961576300]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+shape = SubResource("SphereShape_interaction")

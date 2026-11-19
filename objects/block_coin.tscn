@@ -1,0 +1,33 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="PackedScene" path="res://models/block-coin.glb" id="1_model"]
+[ext_resource type="Script" path="res://objects/block_coin.gd" id="2_script"]
+
+[sub_resource type="BoxShape3D" id="BlockShape"]
+size = Vector3(0.75, 0.75, 0.75)
+
+[sub_resource type="BoxShape3D" id="HeadHitShape"]
+size = Vector3(0.5, 0.25, 0.5)
+
+[node name="BlockCoin" type="StaticBody3D"]
+script = ExtResource("2_script")
+
+[node name="BlockModel" parent="." instance=ExtResource("1_model")]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0, 0.375, 0)
+shape = SubResource("BlockShape")
+
+[node name="BottomDetector" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BottomDetector"]
+position = Vector3(0, -0.1, 0)
+shape = SubResource("HeadHitShape")
+
+[node name="CoinParticles" type="GPUParticles3D" parent="."]
+position = Vector3(0, 0.375, 0)
+amount = 10
+one_shot = true
+lifetime = 1.0
+explosiveness = 1.0
+emitting = false

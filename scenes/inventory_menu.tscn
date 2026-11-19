@@ -1,0 +1,302 @@
+[gd_scene format=3 uid="uid://6m5bpwvmqhoq"]
+
+[ext_resource type="Script" uid="uid://lkfbie6p4ii4" path="res://scripts/inventory_menu.gd" id="1_inventory"]
+[ext_resource type="Theme" uid="uid://boixl5pj5ta8y" path="res://addons/maaacks_menus_template/examples/resources/themes/gravity.tres" id="2_theme"]
+[ext_resource type="PackedScene" path="res://objects/inventory_character.tscn" id="3_character"]
+[ext_resource type="Texture2D" uid="uid://cd7oyc56ehkx1" path="res://sprites/coin.png" id="4_coin"]
+
+[sub_resource type="Environment" id="Environment_lq73l"]
+background_mode = 1
+background_color = Color(0.16619444, 0.17844695, 0.17390877, 1)
+
+[node name="InventoryMenu" type="CanvasLayer" unique_id=1510452450]
+process_mode = 3
+layer = 20
+script = ExtResource("1_inventory")
+player_path = NodePath("../Player")
+
+[node name="Overlay" type="Control" parent="." unique_id=2065015490]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+
+[node name="Backdrop" type="ColorRect" parent="Overlay" unique_id=996131488]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.015, 0.025, 0.04, 0.88)
+
+[node name="Frame" type="PanelContainer" parent="Overlay" unique_id=493161954]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.035
+anchor_top = 0.055
+anchor_right = 0.965
+anchor_bottom = 0.945
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="Overlay/Frame" unique_id=1207807964]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 18
+
+[node name="Layout" type="VBoxContainer" parent="Overlay/Frame/Margin" unique_id=1692857357]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Header" type="HBoxContainer" parent="Overlay/Frame/Margin/Layout" unique_id=1711747136]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Overlay/Frame/Margin/Layout/Header" unique_id=1148288230]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "ADVENTURER'S PACK"
+vertical_alignment = 1
+
+[node name="Subtitle" type="Label" parent="Overlay/Frame/Margin/Layout/Header" unique_id=534317329]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.72, 0.79, 0.84, 1)
+theme_override_font_sizes/font_size = 14
+text = "GEAR  •  SKILLS  •  SUPPLIES"
+vertical_alignment = 1
+
+[node name="CoinIcon" type="TextureRect" parent="Overlay/Frame/Margin/Layout/Header" unique_id=1311002363]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = ExtResource("4_coin")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CoinCount" type="Label" parent="Overlay/Frame/Margin/Layout/Header" unique_id=1702414881]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.36, 1)
+theme_override_font_sizes/font_size = 22
+text = "0"
+vertical_alignment = 1
+
+[node name="CloseButton" type="Button" parent="Overlay/Frame/Margin/Layout/Header" unique_id=376742673]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 38)
+layout_mode = 2
+text = "×"
+
+[node name="Separator" type="HSeparator" parent="Overlay/Frame/Margin/Layout" unique_id=1218129650]
+layout_mode = 2
+
+[node name="Body" type="HBoxContainer" parent="Overlay/Frame/Margin/Layout" unique_id=1888863644]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 20
+
+[node name="CharacterPanel" type="PanelContainer" parent="Overlay/Frame/Margin/Layout/Body" unique_id=225543647]
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+
+[node name="CharacterLayout" type="VBoxContainer" parent="Overlay/Frame/Margin/Layout/Body/CharacterPanel" unique_id=1871950064]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="CharacterHeading" type="Label" parent="Overlay/Frame/Margin/Layout/Body/CharacterPanel/CharacterLayout" unique_id=1415101450]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "CHARACTER"
+horizontal_alignment = 1
+
+[node name="PreviewContainer" type="SubViewportContainer" parent="Overlay/Frame/Margin/Layout/Body/CharacterPanel/CharacterLayout" unique_id=773116402]
+custom_minimum_size = Vector2(280, 365)
+layout_mode = 2
+size_flags_vertical = 3
+stretch = true
+
+[node name="PreviewViewport" type="SubViewport" parent="Overlay/Frame/Margin/Layout/Body/CharacterPanel/CharacterLayout/PreviewContainer" unique_id=2110287730]
+own_world_3d = true
+handle_input_locally = false
+size = Vector2i(320, 394)
+render_target_update_mode = 4
+
+[node name="PreviewWorldEnvironment" type="WorldEnvironment" parent="Overlay/Frame/Margin/Layout/Body/CharacterPanel/CharacterLayout/PreviewContainer/PreviewViewport" unique_id=28292089]
+environment = SubResource("Environment_lq73l")
+
+[node name="PreviewCharacter" parent="Overlay/Frame/Margin/Layout/Body/CharacterPanel/CharacterLayout/PreviewContainer/PreviewViewport" unique_id=280100313 instance=ExtResource("3_character")]
+
+[node name="Camera3D" type="Camera3D" parent="Overlay/Frame/Margin/Layout/Body/CharacterPanel/CharacterLayout/PreviewContainer/PreviewViewport" unique_id=2008571509]
+transform = Transform3D(1, 0, 0, 0, 0.99642307, 0.08450494, 0, -0.08450494, 0.99642307, 0, 1.25, 4.3046947)
+current = true
+fov = 32.0
+
+[node name="KeyLight" type="DirectionalLight3D" parent="Overlay/Frame/Margin/Layout/Body/CharacterPanel/CharacterLayout/PreviewContainer/PreviewViewport" unique_id=1946881593]
+transform = Transform3D(0.88294756, 0.24878204, -0.39813447, 0, 0.8480481, 0.52991927, 0.46947157, -0.46789092, 0.748782, 0, 0, 0)
+
+[node name="FillLight" type="OmniLight3D" parent="Overlay/Frame/Margin/Layout/Body/CharacterPanel/CharacterLayout/PreviewContainer/PreviewViewport" unique_id=1779850267]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1.4, 2.2)
+light_color = Color(0.34, 0.68, 0.8, 1)
+
+[node name="OutfitLabel" type="Label" parent="Overlay/Frame/Margin/Layout/Body/CharacterPanel/CharacterLayout" unique_id=1295013986]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.79, 0.84, 1)
+text = "OUTFIT"
+
+[node name="OutfitSelector" type="OptionButton" parent="Overlay/Frame/Margin/Layout/Body/CharacterPanel/CharacterLayout" unique_id=1798941762]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightPanel" type="PanelContainer" parent="Overlay/Frame/Margin/Layout/Body" unique_id=783371560]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightMargin" type="MarginContainer" parent="Overlay/Frame/Margin/Layout/Body/RightPanel" unique_id=308327019]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 12
+
+[node name="Tabs" type="TabContainer" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin" unique_id=1903904554]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/side_margin = 6
+current_tab = 0
+
+[node name="Inventory" type="VBoxContainer" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs" unique_id=660435097]
+layout_mode = 2
+theme_override_constants/separation = 12
+metadata/_tab_index = 0
+
+[node name="InventoryHeading" type="Label" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Inventory" unique_id=1312042946]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "COLLECTED ITEMS"
+
+[node name="InventoryNote" type="Label" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Inventory" unique_id=1605007242]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.79, 0.84, 1)
+text = "Pickups are stored here. Select a usable item to use it."
+
+[node name="ItemScroll" type="ScrollContainer" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Inventory" unique_id=157799987]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ItemGrid" type="GridContainer" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Inventory/ItemScroll" unique_id=1607730477]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+columns = 5
+
+[node name="Skills" type="VBoxContainer" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs" unique_id=507776250]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 14
+metadata/_tab_index = 1
+
+[node name="SkillsHeading" type="Label" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Skills" unique_id=1912229926]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "KNOWN SKILLS"
+
+[node name="SkillsHint" type="Label" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Skills" unique_id=718415448]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.79, 0.84, 1)
+text = "Abilities currently available to this adventurer."
+
+[node name="DoubleJumpCard" type="PanelContainer" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Skills" unique_id=1303968381]
+layout_mode = 2
+
+[node name="DoubleJumpText" type="Label" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Skills/DoubleJumpCard" unique_id=1414304546]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "✦  DOUBLE JUMP     UNLOCKED
+Jump once more while airborne."
+
+[node name="ComboCard" type="PanelContainer" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Skills" unique_id=1661575504]
+layout_mode = 2
+
+[node name="ComboText" type="Label" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Skills/ComboCard" unique_id=845117685]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "✦  COMBO PUNCH     UNLOCKED
+Chain attacks with J or left mouse button."
+
+[node name="Shop" type="VBoxContainer" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs" unique_id=1735862798]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 14
+metadata/_tab_index = 2
+
+[node name="ShopHeading" type="Label" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Shop" unique_id=532302439]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "TRAVELER'S SHOP"
+
+[node name="ShopHint" type="Label" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Shop" unique_id=715801373]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.79, 0.84, 1)
+text = "Spend collected coins on supplies. Purchased items are added to your inventory."
+autowrap_mode = 2
+
+[node name="PotionCard" type="PanelContainer" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Shop" unique_id=1780074602]
+layout_mode = 2
+
+[node name="PotionRow" type="HBoxContainer" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Shop/PotionCard" unique_id=1892503015]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="PotionIcon" type="Label" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Shop/PotionCard/PotionRow" unique_id=1865288897]
+custom_minimum_size = Vector2(58, 58)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.46, 0.89, 0.79, 1)
+theme_override_font_sizes/font_size = 30
+text = "✚"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PotionDescription" type="Label" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Shop/PotionCard/PotionRow" unique_id=1809116153]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "HEALTH POTION
+Restores up to 35 health."
+vertical_alignment = 1
+
+[node name="BuyPotionButton" type="Button" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Shop/PotionCard/PotionRow" unique_id=1169699429]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 42)
+layout_mode = 2
+text = "BUY  ·  5 COINS"
+
+[node name="ShopStatus" type="Label" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Shop" unique_id=960817439]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.79, 0.84, 1)
+
+[node name="Footer" type="HBoxContainer" parent="Overlay/Frame/Margin/Layout" unique_id=1665434566]
+layout_mode = 2
+
+[node name="ShortcutHint" type="Label" parent="Overlay/Frame/Margin/Layout/Footer" unique_id=1994767024]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.72, 0.79, 0.84, 1)
+text = "I  CLOSE INVENTORY     ESC  RESUME GAME"
+
+[connection signal="pressed" from="Overlay/Frame/Margin/Layout/Header/CloseButton" to="." method="close_inventory"]
+[connection signal="item_selected" from="Overlay/Frame/Margin/Layout/Body/CharacterPanel/CharacterLayout/OutfitSelector" to="." method="_on_outfit_selected"]
+[connection signal="pressed" from="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Shop/PotionCard/PotionRow/BuyPotionButton" to="." method="_on_buy_potion_pressed"]

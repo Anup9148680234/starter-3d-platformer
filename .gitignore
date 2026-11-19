@@ -1,0 +1,33 @@
+# Godot 4+ specific ignores
+.godot/
+.import/
+.export/
+*.tmp
+*.bak
+/android/
+
+*.import
+*.blend
+
+glTF/
+meshes/
+models/
+OBJ/
+Blends/
+
+animations/
+addons/
+FBX/
+fonts/
+objects/terrain_textures/
+objects/Terrain/
+
+sounds/
+screenshots/
+Textures/
+vector/
+
+Free Fire VFX/
+
+
+

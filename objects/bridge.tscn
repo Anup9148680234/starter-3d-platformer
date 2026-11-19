@@ -1,0 +1,103 @@
+[gd_scene format=3 uid="uid://dv4pf1spom5g8"]
+
+[ext_resource type="PackedScene" uid="uid://k6sjnx63rh68" path="res://environment/Blocks/FBX/Block_WoodPlanks.fbx" id="1_planks"]
+[ext_resource type="PackedScene" uid="uid://dagwywbfcaxf8" path="res://environment/Blocks/FBX/Block_GreyBricks.fbx" id="2_stone"]
+[ext_resource type="PackedScene" uid="uid://b7j7l34ylos5a" path="res://environment/Environment/FBX/Fence_Center.fbx" id="3_fence"]
+[ext_resource type="PackedScene" uid="uid://db2gkpgjkv6sk" path="res://environment/Environment/FBX/Fence_End.fbx" id="4_fence_end"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_deck"]
+size = Vector3(4.04, 0.36, 4.0)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_rail"]
+size = Vector3(0.6, 1.3, 4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_pier"]
+size = Vector3(0.56, 0.8, 0.56)
+
+[node name="platform" type="Node3D" unique_id=1709800122]
+
+[node name="DeckLeftFront" parent="." unique_id=1338139084 instance=ExtResource("1_planks")]
+transform = Transform3D(1.02, 0, 0, 0, 0.18, 0, 0, 0, 1, -1, 0, 1)
+
+[node name="DeckRightFront" parent="." unique_id=489844878 instance=ExtResource("1_planks")]
+transform = Transform3D(1.02, 0, 0, 0, 0.18, 0, 0, 0, 1, 1, 0, 1)
+
+[node name="DeckLeftBack" parent="." unique_id=1515284714 instance=ExtResource("1_planks")]
+transform = Transform3D(1.02, 0, 0, 0, 0.18, 0, 0, 0, 1, -1, 0, 3)
+
+[node name="DeckRightBack" parent="." unique_id=1043212514 instance=ExtResource("1_planks")]
+transform = Transform3D(1.02, 0, 0, 0, 0.18, 0, 0, 0, 1, 1, 0, 3)
+
+[node name="StonePierLeftFront" parent="." unique_id=989000420 instance=ExtResource("2_stone")]
+transform = Transform3D(0.28, 0, 0, 0, 0.4, 0, 0, 0, 0.28, -1.7, -0.58, 0.4)
+
+[node name="StonePierRightFront" parent="." unique_id=298197651 instance=ExtResource("2_stone")]
+transform = Transform3D(0.28, 0, 0, 0, 0.4, 0, 0, 0, 0.28, 1.7, -0.58, 0.4)
+
+[node name="StonePierLeftBack" parent="." unique_id=990999459 instance=ExtResource("2_stone")]
+transform = Transform3D(0.28, 0, 0, 0, 0.4, 0, 0, 0, 0.28, -1.7, -0.58, 3.6)
+
+[node name="StonePierRightBack" parent="." unique_id=841961256 instance=ExtResource("2_stone")]
+transform = Transform3D(0.28, 0, 0, 0, 0.4, 0, 0, 0, 0.28, 1.7, -0.58, 3.6)
+
+[node name="FenceLeftFrontEnd" parent="." instance=ExtResource("4_fence_end")]
+position = Vector3(-1.8, 0.83, 0.225)
+rotation_degrees = Vector3(0, 90, 0)
+scale = Vector3(0.775, 0.65, 1)
+
+[node name="FenceLeftCenter" parent="." instance=ExtResource("3_fence")]
+position = Vector3(-1.8, 0.83, 2)
+rotation_degrees = Vector3(0, 90, 0)
+scale = Vector3(1, 0.65, 1)
+
+[node name="FenceLeftBackEnd" parent="." instance=ExtResource("4_fence_end")]
+position = Vector3(-1.8, 0.83, 3.775)
+rotation_degrees = Vector3(0, -90, 0)
+scale = Vector3(0.775, 0.65, 1)
+
+[node name="FenceRightFrontEnd" parent="." instance=ExtResource("4_fence_end")]
+position = Vector3(1.8, 0.83, 0.225)
+rotation_degrees = Vector3(0, 90, 0)
+scale = Vector3(0.775, 0.65, 1)
+
+[node name="FenceRightCenter" parent="." instance=ExtResource("3_fence")]
+position = Vector3(1.8, 0.83, 2)
+rotation_degrees = Vector3(0, 90, 0)
+scale = Vector3(1, 0.65, 1)
+
+[node name="FenceRightBackEnd" parent="." instance=ExtResource("4_fence_end")]
+position = Vector3(1.8, 0.83, 3.775)
+rotation_degrees = Vector3(0, -90, 0)
+scale = Vector3(0.775, 0.65, 1)
+
+[node name="BridgeCollision" type="StaticBody3D" parent="." unique_id=258985705]
+collision_layer = 1
+collision_mask = 1
+
+[node name="DeckCollision" type="CollisionShape3D" parent="BridgeCollision" unique_id=2098365502]
+position = Vector3(0, 0, 2)
+shape = SubResource("BoxShape3D_deck")
+
+[node name="LeftRailCollision" type="CollisionShape3D" parent="BridgeCollision" unique_id=1002743580]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8, 0.83, 2)
+shape = SubResource("BoxShape3D_rail")
+
+[node name="RightRailCollision" type="CollisionShape3D" parent="BridgeCollision" unique_id=640152823]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 0.83, 2)
+shape = SubResource("BoxShape3D_rail")
+
+[node name="LeftFrontPierCollision" type="CollisionShape3D" parent="BridgeCollision" unique_id=1003896908]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7, -0.58, 0.4)
+shape = SubResource("BoxShape3D_pier")
+
+[node name="RightFrontPierCollision" type="CollisionShape3D" parent="BridgeCollision" unique_id=475136568]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.7, -0.58, 0.4)
+shape = SubResource("BoxShape3D_pier")
+
+[node name="LeftBackPierCollision" type="CollisionShape3D" parent="BridgeCollision" unique_id=709727571]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7, -0.58, 3.6)
+shape = SubResource("BoxShape3D_pier")
+
+[node name="RightBackPierCollision" type="CollisionShape3D" parent="BridgeCollision" unique_id=12872433]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.7, -0.58, 3.6)
+shape = SubResource("BoxShape3D_pier")

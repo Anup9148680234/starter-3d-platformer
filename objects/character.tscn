@@ -1,0 +1,35 @@
+[gd_scene format=3 uid="uid://c0e27836xgmhi"]
+
+[ext_resource type="PackedScene" uid="uid://crduqmu7wfi2f" path="res://UAL1_Standard.glb" id="1_ual_model"]
+[ext_resource type="PackedScene" uid="uid://mbk3303yykui" path="res://objects/low_poly_sword.glb" id="2_dkojc"]
+[ext_resource type="AnimationLibrary" uid="uid://cw5cp24g80p7b" path="res://animations/ual_animation_library.tres" id="2_ual_animations"]
+[ext_resource type="PackedScene" uid="uid://b3obrvg54mt2e" path="res://objects/rocket.glb" id="4_p6yo4"]
+[ext_resource type="PackedScene" uid="uid://8mcdnq7qst71" path="res://Free Fire VFX/Particles/VFX_Fire_01_Small_Simple.tscn" id="5_4ujcv"]
+
+[node name="Character" unique_id=1953895465 instance=ExtResource("1_ual_model")]
+
+[node name="SwordHandAttachment" type="BoneAttachment3D" parent="Armature/GeneralSkeleton" parent_id_path=PackedInt32Array(1145892265) index="1" unique_id=428414676]
+transform = Transform3D(0, -1, 0, 0, 0, -1, 1, 0, 0, -0.73889995, 1.4408, -0.06540011)
+bone_name = "RightHand"
+bone_idx = 34
+use_external_skeleton = true
+external_skeleton = NodePath("..")
+
+[node name="Sword" parent="Armature/GeneralSkeleton/SwordHandAttachment" index="0" unique_id=2841504 instance=ExtResource("2_dkojc")]
+transform = Transform3D(0.012487336, 0.19960982, 8.7252205e-09, -0.193798, 0.012123759, -0.04790978, -0.047816314, 0.0029913192, 0.1941769, 0.078418, 0.108184874, 0.045277)
+
+[node name="backpackAttachment" type="BoneAttachment3D" parent="Armature/GeneralSkeleton" parent_id_path=PackedInt32Array(1145892265) index="2" unique_id=1028466570]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0505, -0.015600067)
+bone_name = "Spine"
+bone_idx = 2
+
+[node name="rocket" parent="Armature/GeneralSkeleton/backpackAttachment" index="0" unique_id=1406652822 instance=ExtResource("4_p6yo4")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0.0004950315, 0.3977474, -0.23964377)
+visible = false
+
+[node name="AnimationPlayer" parent="." index="1" unique_id=713827559]
+libraries/UAL = ExtResource("2_ual_animations")
+
+[node name="left_flame" parent="." index="2" unique_id=1165417673 instance=ExtResource("5_4ujcv")]
+transform = Transform3D(1, 0, 0, 0, -0.9995191, -0.031008128, 0, 0.031008128, -0.9995191, 0.0037756115, 1.2459036, -0.26487458)
+visible = false

@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://can784qkku8c0"]
+
+[ext_resource type="PackedScene" uid="uid://dl2ed4gkybggf" path="res://objects/player.tscn" id="1_player"]
+[ext_resource type="Script" uid="uid://bcg2kkbsnttec" path="res://scripts/view.gd" id="2_view"]
+
+[node name="PlayerSpawner" type="Node3D" unique_id=959924962]
+
+[node name="Player" parent="." unique_id=1389082301 node_paths=PackedStringArray("view") groups=["player"] instance=ExtResource("1_player")]
+transform = Transform3D(0.0058333105, 0, -0.999983, 0, 1, 0, 0.999983, 0, 0.0058333105, 0, 0.49277484, 0)
+view = NodePath("../View")
+
+[node name="View" type="Node3D" parent="." unique_id=1954633390 node_paths=PackedStringArray("target")]
+transform = Transform3D(0.707107, -0.298836, 0.640856, 0, 0.906308, 0.422618, -0.707107, -0.298836, 0.640856, 0, 0, 0)
+script = ExtResource("2_view")
+target = NodePath("../Player")
+
+[node name="Camera" type="Camera3D" parent="View" unique_id=1181968894]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 10)
+current = true
+fov = 40.0

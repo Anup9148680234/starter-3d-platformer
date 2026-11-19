@@ -1,0 +1,78 @@
+[gd_scene load_steps=9 format=3 uid="uid://c03crr60gafg3"]
+
+[ext_resource type="Script" path="res://effects/blue_jet.gd" id="1_script"]
+
+[sub_resource type="StandardMaterial3D" id="Material_outer"]
+transparency = 1
+shading_mode = 0
+cull_mode = 2
+albedo_color = Color(0.04, 0.22, 1, 0.52)
+emission_enabled = true
+emission = Color(0.015, 0.12, 1, 1)
+emission_energy_multiplier = 1.8
+
+[sub_resource type="StandardMaterial3D" id="Material_inner"]
+shading_mode = 0
+cull_mode = 2
+albedo_color = Color(0.08, 0.72, 1, 1)
+emission_enabled = true
+emission = Color(0.06, 0.58, 1, 1)
+emission_energy_multiplier = 2.8
+
+[sub_resource type="StandardMaterial3D" id="Material_core"]
+shading_mode = 0
+cull_mode = 2
+albedo_color = Color(0.78, 0.98, 1, 1)
+emission_enabled = true
+emission = Color(0.3, 0.85, 1, 1)
+emission_energy_multiplier = 4.0
+
+[sub_resource type="CylinderMesh" id="Mesh_outer"]
+top_radius = 0.004
+bottom_radius = 0.16
+height = 0.95
+radial_segments = 16
+rings = 4
+material = SubResource("Material_outer")
+
+[sub_resource type="CylinderMesh" id="Mesh_inner"]
+top_radius = 0.002
+bottom_radius = 0.095
+height = 0.72
+radial_segments = 12
+rings = 4
+material = SubResource("Material_inner")
+
+[sub_resource type="CylinderMesh" id="Mesh_core"]
+top_radius = 0.001
+bottom_radius = 0.045
+height = 0.48
+radial_segments = 10
+rings = 3
+material = SubResource("Material_core")
+
+[sub_resource type="TorusMesh" id="Mesh_nozzle_ring"]
+inner_radius = 0.105
+outer_radius = 0.16
+rings = 12
+ring_segments = 8
+material = SubResource("Material_inner")
+
+[node name="BlueJet" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="OuterFlame" type="MeshInstance3D" parent="."]
+rotation = Vector3(-1.5708, 0, 0)
+mesh = SubResource("Mesh_outer")
+
+[node name="InnerFlame" type="MeshInstance3D" parent="."]
+rotation = Vector3(-1.5708, 0, 0)
+mesh = SubResource("Mesh_inner")
+
+[node name="CoreFlame" type="MeshInstance3D" parent="."]
+rotation = Vector3(-1.5708, 0, 0)
+mesh = SubResource("Mesh_core")
+
+[node name="NozzleRing" type="MeshInstance3D" parent="."]
+rotation = Vector3(1.5708, 0, 0)
+mesh = SubResource("Mesh_nozzle_ring")

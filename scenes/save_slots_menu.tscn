@@ -1,0 +1,90 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/save_slots_menu.gd" id="1_script"]
+
+[node name="SaveSlotsMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.78)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(720, 500)
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="CenterContainer/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 24
+
+[node name="Layout" type="VBoxContainer" parent="CenterContainer/Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Heading" type="Label" parent="CenterContainer/Panel/Margin/Layout"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 34
+text = "Load Game"
+horizontal_alignment = 1
+
+[node name="Instructions" type="Label" parent="CenterContainer/Panel/Margin/Layout"]
+layout_mode = 2
+text = "Choose a checkpoint save to continue, or delete a save slot."
+horizontal_alignment = 1
+
+[node name="SaveScroll" type="ScrollContainer" parent="CenterContainer/Panel/Margin/Layout"]
+custom_minimum_size = Vector2(0, 315)
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="SaveList" type="VBoxContainer" parent="CenterContainer/Panel/Margin/Layout/SaveScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="Status" type="Label" parent="CenterContainer/Panel/Margin/Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+text = ""
+horizontal_alignment = 1
+
+[node name="Buttons" type="HBoxContainer" parent="CenterContainer/Panel/Margin/Layout"]
+layout_mode = 2
+alignment = 1
+
+[node name="BackButton" type="Button" parent="CenterContainer/Panel/Margin/Layout/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 48)
+layout_mode = 2
+text = "Back"
+
+[node name="DeleteConfirmation" type="ConfirmationDialog" parent="."]
+title = "Delete Save"
+dialog_text = "Delete this save slot? This cannot be undone."
+
+[connection signal="pressed" from="CenterContainer/Panel/Margin/Layout/Buttons/BackButton" to="." method="close_menu"]
+[connection signal="confirmed" from="DeleteConfirmation" to="." method="_confirm_delete"]
