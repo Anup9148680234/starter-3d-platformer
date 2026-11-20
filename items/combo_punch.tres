@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemDefinition" format=3 uid="uid://2hvallv0vbnk"]
+
+[ext_resource type="Script" uid="uid://664wl2rdl238" path="res://scripts/item_definition.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://b5rufjlpo5pb" path="res://icons/combo_punch.svg" id="2_icon"]
+
+[resource]
+script = ExtResource("1_script")
+item_id = &"combo_punch"
+display_name = "Combo Punch"
+description = "Chain punch attacks with the attack control."
+icon = ExtResource("2_icon")
+rarity = "uncommon"
+category = "skill"
+ability_id = &"combo_punch"
+stackable = false

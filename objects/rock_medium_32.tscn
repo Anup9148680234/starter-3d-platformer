@@ -1,0 +1,5 @@
+[gd_scene format=3 uid="uid://ci8asehk2snl1"]
+
+[ext_resource type="PackedScene" uid="uid://cjfojaowblpxq" path="res://glTF/Rock_Medium_3.gltf" id="1_28pxv"]
+
+[node name="Rock_Medium_32" unique_id=1100804075 instance=ExtResource("1_28pxv")]

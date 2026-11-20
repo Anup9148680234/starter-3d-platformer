@@ -27,6 +27,10 @@
 [ext_resource type="PackedScene" path="res://objects/block_coin.tscn" id="25_2cm2o"]
 [ext_resource type="PackedScene" uid="uid://b8jw7u87ltsdw" path="res://objects/moving_platform_medium.tscn" id="26_a2qpo"]
 [ext_resource type="PackedScene" uid="uid://bc1eyelyxfjvq" path="res://objects/chest.tscn" id="27_qx5v5"]
+[ext_resource type="PackedScene" uid="uid://cjfojaowblpxq" path="res://glTF/Rock_Medium_3.gltf" id="28_byi2v"]
+[ext_resource type="PackedScene" uid="uid://csim8qdbjln7y" path="res://FBX/Rock_Medium_1.fbx" id="29_4epll"]
+[ext_resource type="PackedScene" uid="uid://c1qcnqnnetb6r" path="res://FBX/Rock_Medium_2.fbx" id="30_hyecm"]
+[ext_resource type="PackedScene" uid="uid://biyd6x403gvny" path="res://models/platform-falling.glb" id="31_61bba"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_xm663"]
 font = ExtResource("9_2p8op")
@@ -295,7 +299,7 @@ metadata/_edit_lock_ = false
 [node name="Terrain_Assets" type="Node3D" parent="q1" unique_id=1665908074]
 
 [node name="Demon Enemy" parent="." unique_id=630380782 instance=ExtResource("12_o537t")]
-transform = Transform3D(0.0033981297, 0, -0.9999942, 0, 1, 0, 0.9999942, 0, 0.0033981297, 223.52832, 0, -440.1753)
+transform = Transform3D(0.0033981297, 0, -0.9999942, 0, 1, 0, 0.9999942, 0, 0.0033981297, 161.53717, 0, -440.1753)
 
 [node name="Demon Enemy2" parent="." unique_id=1530936176 instance=ExtResource("12_o537t")]
 transform = Transform3D(0.4417802, 0, -0.89712334, 0, 1, 0, 0.89712334, 0, 0.4417802, 223.72595, 0, -454.05844)
@@ -719,11 +723,23 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 77.7787, -0.059731007, -149.9
 [node name="platform2" parent="." unique_id=270252988 instance=ExtResource("21_tc1op")]
 transform = Transform3D(0.99337715, 0, 0.114899054, 0, 1, 0, -0.114899054, 0, 0.99337715, 78.54014, 0.65325165, -157.82004)
 
+[node name="platform4" parent="." unique_id=1385321747 instance=ExtResource("21_tc1op")]
+transform = Transform3D(0.6187051, 0, 0.78562343, 0, 1, 0, -0.78562343, 0, 0.6187051, 66.09759, 19.031586, -276.25024)
+
+[node name="platform7" parent="." unique_id=1626641620 instance=ExtResource("21_tc1op")]
+transform = Transform3D(0.6187051, 0, 0.78562343, 0, 1, 0, -0.78562343, 0, 0.6187051, 60.339783, 20.254234, -279.6241)
+
+[node name="platform5" parent="." unique_id=865969364 instance=ExtResource("21_tc1op")]
+transform = Transform3D(0.6187051, 0, 0.78562343, 0, 1, 0, -0.78562343, 0, 0.6187051, 72.438705, 17.833208, -272.86038)
+
+[node name="platform6" parent="." unique_id=1730609006 instance=ExtResource("21_tc1op")]
+transform = Transform3D(0.6187051, 0, 0.78562343, 0, 1, 0, -0.78562343, 0, 0.6187051, 77.57412, 16.463308, -269.09604)
+
 [node name="platform3" parent="." unique_id=1287598448 instance=ExtResource("21_tc1op")]
 transform = Transform3D(0.9835994, 0, -0.18036681, 0, 1, 0, 0.18036681, 0, 0.9835994, 78.54014, 0.65325165, -166.3265)
 
 [node name="platform-falling" parent="." unique_id=248557384 instance=ExtResource("22_2cm2o")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 75.74116, 3.1235895, -175.81142)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 75.74116, 2.724862, -175.81142)
 
 [node name="platform-falling2" parent="." unique_id=67341269 instance=ExtResource("22_2cm2o")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 76.02811, 3.1235895, -180.18205)
@@ -734,11 +750,41 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80.37539, 3.1235895, -183.244
 [node name="platform-falling4" parent="." unique_id=1672609428 instance=ExtResource("22_2cm2o")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 83.692474, 3.1235895, -187.26462)
 
+[node name="platform-falling12" parent="." unique_id=2117089089 instance=ExtResource("22_2cm2o")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 78.00471, 3.85538, -222.75876)
+
+[node name="platform-falling13" parent="." unique_id=701655643 instance=ExtResource("22_2cm2o")]
+transform = Transform3D(0.90361816, 0, 0.4283389, 0, 1, 0, -0.4283389, 0, 0.90361816, 74.630455, 6.457775, -226.90991)
+
+[node name="platform-falling17" parent="." unique_id=1252188987 instance=ExtResource("22_2cm2o")]
+transform = Transform3D(0.90361816, 0, 0.4283389, 0, 1, 0, -0.4283389, 0, 0.90361816, 72.81317, 7.1449337, -229.93268)
+
+[node name="platform-falling18" parent="." unique_id=1946224879 instance=ExtResource("22_2cm2o")]
+transform = Transform3D(0.90361816, 0, 0.4283389, 0, 1, 0, -0.4283389, 0, 0.90361816, 72.81317, 7.1449337, -229.93268)
+
+[node name="platform-falling14" parent="." unique_id=1313639540 instance=ExtResource("22_2cm2o")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 78.00471, 5.272626, -225.90714)
+
+[node name="platform-falling15" parent="." unique_id=489209283 instance=ExtResource("22_2cm2o")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 78.00471, 12.85826, -255.27179)
+
+[node name="platform-falling16" parent="." unique_id=1501575785 instance=ExtResource("22_2cm2o")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 77.19885, 14.164414, -258.131)
+
+[node name="platform-falling19" parent="." unique_id=809373721 instance=ExtResource("22_2cm2o")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 76.50981, 14.543974, -261.53647)
+
+[node name="platform-falling20" parent="." unique_id=630638736 instance=ExtResource("22_2cm2o")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 76.50981, 15.423021, -264.84515)
+
 [node name="platform-falling7" parent="." unique_id=21543536 instance=ExtResource("22_2cm2o")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 85.177155, 3.1235895, -191.70996)
 
 [node name="platform-grass-large-round" parent="." unique_id=325428714 instance=ExtResource("23_a2qpo")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80.879135, 2.975214, -195.72081)
+
+[node name="platform-grass-large-round2" parent="." unique_id=1594375613 instance=ExtResource("23_a2qpo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80.879135, 2.975214, -218.84459)
 
 [node name="coin" parent="." unique_id=409232128 instance=ExtResource("24_qx5v5")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 76.21031, 3.6235895, -175.58484)
@@ -756,7 +802,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 85.12348, 3.6235876, -190.160
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 77.48827, 0.6208868, -169.22052)
 
 [node name="platform-falling6" parent="." unique_id=167942365 instance=ExtResource("22_2cm2o")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 76.83531, 2.3298225, -172.23422)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 76.83531, 1.7069235, -172.23422)
 
 [node name="block-coin2" parent="." unique_id=1573433204 instance=ExtResource("25_2cm2o")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 81.340034, 5.4240856, -195.35817)
@@ -767,9 +813,81 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 82.29091, 3.4752135, -202.355
 [node name="platform-medium2" parent="." unique_id=1551260026 instance=ExtResource("26_a2qpo")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 82.29091, 3.4752135, -208.22818)
 
-[node name="Chest" parent="." unique_id=176362975 instance=ExtResource("27_qx5v5")]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 81.09186, 0.0015452967, -105.596664)
-reward_item_id = &"sworda"
+[node name="platform-medium3" parent="." unique_id=396633356 instance=ExtResource("26_a2qpo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 82.29091, 3.4752135, -213.12762)
+
+[node name="platform-medium7" parent="." unique_id=1441178118 instance=ExtResource("26_a2qpo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 82.29091, 8.170685, -242.72414)
+
+[node name="platform-medium8" parent="." unique_id=1175033199 instance=ExtResource("26_a2qpo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 82.29091, 9.581544, -246.88359)
+
+[node name="platform-medium10" parent="." unique_id=325115514 instance=ExtResource("26_a2qpo")]
+transform = Transform3D(-0.012258147, 0, 0.99992484, 0, 1, 0, -0.99992484, 0, -0.012258147, 58.99009, 23.473349, -289.49185)
+
+[node name="platform-medium11" parent="." unique_id=763095320 instance=ExtResource("26_a2qpo")]
+transform = Transform3D(-0.012258147, 0, 0.99992484, 0, 1, 0, -0.99992484, 0, -0.012258147, 62.290268, 24.018812, -294.84567)
+
+[node name="platform-medium12" parent="." unique_id=2066709364 instance=ExtResource("26_a2qpo")]
+transform = Transform3D(-0.012258147, 0, 0.99992484, 0, 1, 0, -0.99992484, 0, -0.012258147, 66.21302, 25.12403, -299.23904)
+
+[node name="platform-medium13" parent="." unique_id=729691737 instance=ExtResource("26_a2qpo")]
+transform = Transform3D(-0.012258147, 0, 0.99992484, 0, 1, 0, -0.99992484, 0, -0.012258147, 61.99546, 26.246012, -304.14337)
+
+[node name="platform-medium9" parent="." unique_id=1261426781 instance=ExtResource("26_a2qpo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 82.29091, 11.070786, -251.59671)
+
+[node name="platform-medium4" parent="." unique_id=701802831 instance=ExtResource("26_a2qpo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 82.29091, 18.775648, -338.1645)
+
+[node name="platform-medium5" parent="." unique_id=159074483 instance=ExtResource("26_a2qpo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 82.29091, 15.149778, -344.93713)
+
+[node name="platform-medium6" parent="." unique_id=2127821779 instance=ExtResource("26_a2qpo")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 82.29091, 12.983358, -351.2171)
+
+[node name="Chest2" parent="." unique_id=1452042184 instance=ExtResource("27_qx5v5")]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 91.18165, 0.0009296576, -111.39877)
+reward_item_id = "glider"
+
+[node name="Chest3" parent="." unique_id=1905655009 instance=ExtResource("27_qx5v5")]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 79.46087, 7.934001, -107.04649)
+reward_item_id = "double_jump"
+
+[node name="Chest4" parent="." unique_id=176362975 instance=ExtResource("27_qx5v5")]
+transform = Transform3D(0.2962159, 0.04749883, 0, -0.04749883, 0.2962159, 0, 0, 0, 0.29999998, 94.51404, 25.904264, -317.72458)
+reward_item_id = "Sword Regular Combo:sword_regular_combo"
+
+[node name="Chest5" parent="." unique_id=1417100432 instance=ExtResource("27_qx5v5")]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 70.950645, 27.497849, -318.9299)
+reward_item_id = "Sword Heavy Combo:sword_heavy_combo"
+
+[node name="Chest" parent="." unique_id=126426091 instance=ExtResource("27_qx5v5")]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 81.90565, 0.00093156495, -111.27443)
+
+[node name="Rock_Large_0" parent="." unique_id=1100804075 instance=ExtResource("28_byi2v")]
+transform = Transform3D(6.1315746, 0, 0, 0, 18.172308, 0, 0, 0, 4.533873, 75.918755, -26.01503, -236.28175)
+
+[node name="Rock_Large_1" parent="." unique_id=704266851 instance=ExtResource("29_4epll")]
+transform = Transform3D(-2.801961, 0, -8.2447605, 0, 22.901587, 0, 8.635472, 0, -2.6751862, 87.94603, -28.649746, -260.16058)
+
+[node name="Rock_Large_2" parent="." unique_id=1528587607 instance=ExtResource("29_4epll")]
+transform = Transform3D(-4.4938283, 2.58147, -8.179354, 0.4438366, 26.137283, 0.8078405, 9.047229, 0, -4.102379, 54.479393, -28.649746, -281.03555)
+
+[node name="Rock_Large_3" parent="." unique_id=877980720 instance=ExtResource("30_hyecm")]
+transform = Transform3D(-13.054606, -4.9971137, 0, 2.0084138, -32.48104, 0, 0, 0, 10.436855, 81.06416, 27.517267, -313.42856)
+
+[node name="platform-falling8" parent="." unique_id=2069411830 instance=ExtResource("31_61bba")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 83.143715, 8.354998, -357.81622)
+
+[node name="platform-falling9" parent="." unique_id=1260070913 instance=ExtResource("31_61bba")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 83.143715, 8.354998, -363.4312)
+
+[node name="platform-falling10" parent="." unique_id=1011568250 instance=ExtResource("31_61bba")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 83.143715, 6.315954, -368.5199)
+
+[node name="platform-falling11" parent="." unique_id=997868204 instance=ExtResource("31_61bba")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 83.143715, 4.022852, -372.19836)
 
 [connection signal="coin_collected" from="Player" to="HUD" method="_on_coin_collected"]
 [connection signal="health_changed" from="Player" to="HUD" method="_on_health_changed"]

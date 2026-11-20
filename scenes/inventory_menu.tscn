@@ -39,22 +39,22 @@ color = Color(0.015, 0.025, 0.04, 0.88)
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.035
-anchor_top = 0.055
+anchor_top = 0.01
 anchor_right = 0.965
-anchor_bottom = 0.945
+anchor_bottom = 0.99
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Margin" type="MarginContainer" parent="Overlay/Frame" unique_id=1207807964]
 layout_mode = 2
 theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 18
+theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 18
+theme_override_constants/margin_bottom = 12
 
 [node name="Layout" type="VBoxContainer" parent="Overlay/Frame/Margin" unique_id=1692857357]
 layout_mode = 2
-theme_override_constants/separation = 14
+theme_override_constants/separation = 10
 
 [node name="Header" type="HBoxContainer" parent="Overlay/Frame/Margin/Layout" unique_id=1711747136]
 layout_mode = 2
@@ -63,7 +63,7 @@ theme_override_constants/separation = 12
 [node name="Title" type="Label" parent="Overlay/Frame/Margin/Layout/Header" unique_id=1148288230]
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
-text = "ADVENTURER'S PACK"
+text = "INVENTORY"
 vertical_alignment = 1
 
 [node name="Subtitle" type="Label" parent="Overlay/Frame/Margin/Layout/Header" unique_id=534317329]
@@ -71,7 +71,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.72, 0.79, 0.84, 1)
 theme_override_font_sizes/font_size = 14
-text = "GEAR  •  SKILLS  •  SUPPLIES"
+text = "GEAR  •  ABILITIES  •  SUPPLIES"
 vertical_alignment = 1
 
 [node name="CoinIcon" type="TextureRect" parent="Overlay/Frame/Margin/Layout/Header" unique_id=1311002363]
@@ -110,7 +110,7 @@ layout_mode = 2
 
 [node name="CharacterLayout" type="VBoxContainer" parent="Overlay/Frame/Margin/Layout/Body/CharacterPanel" unique_id=1871950064]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 6
 
 [node name="CharacterHeading" type="Label" parent="Overlay/Frame/Margin/Layout/Body/CharacterPanel/CharacterLayout" unique_id=1415101450]
 layout_mode = 2
@@ -146,6 +146,19 @@ transform = Transform3D(0.88294756, 0.24878204, -0.39813447, 0, 0.8480481, 0.529
 [node name="FillLight" type="OmniLight3D" parent="Overlay/Frame/Margin/Layout/Body/CharacterPanel/CharacterLayout/PreviewContainer/PreviewViewport" unique_id=1779850267]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1.4, 2.2)
 light_color = Color(0.34, 0.68, 0.8, 1)
+
+[node name="AbilitySlotsHeading" type="Label" parent="Overlay/Frame/Margin/Layout/Body/CharacterPanel/CharacterLayout" unique_id=413522804]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.79, 0.84, 1)
+theme_override_font_sizes/font_size = 13
+text = "QUICK EQUIP  ·  DRAG ABILITIES INTO SLOTS"
+horizontal_alignment = 1
+
+[node name="AbilitySlots" type="HBoxContainer" parent="Overlay/Frame/Margin/Layout/Body/CharacterPanel/CharacterLayout" unique_id=1734912884]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 5
 
 [node name="OutfitLabel" type="Label" parent="Overlay/Frame/Margin/Layout/Body/CharacterPanel/CharacterLayout" unique_id=1295013986]
 layout_mode = 2
@@ -188,7 +201,8 @@ text = "COLLECTED ITEMS"
 [node name="InventoryNote" type="Label" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Inventory" unique_id=1605007242]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.72, 0.79, 0.84, 1)
-text = "Pickups are stored here. Select a usable item to use it."
+text = "Drag sword, double jump, or glider rewards into the five quick-equip slots below your character."
+autowrap_mode = 2
 
 [node name="ItemScroll" type="ScrollContainer" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Inventory" unique_id=157799987]
 layout_mode = 2
@@ -223,10 +237,31 @@ text = "Abilities currently available to this adventurer."
 layout_mode = 2
 
 [node name="DoubleJumpText" type="Label" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Skills/DoubleJumpCard" unique_id=1414304546]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "✦  DOUBLE JUMP     UNLOCKED
-Jump once more while airborne."
+text = "✦  DOUBLE JUMP  ·  LOCKED
+Find it in a chest, then drag it into a slot."
+
+[node name="SwordCard" type="PanelContainer" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Skills" unique_id=831207667]
+layout_mode = 2
+
+[node name="SwordText" type="Label" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Skills/SwordCard" unique_id=1284329091]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "✦  SWORD  ·  LOCKED
+Find it in a chest, then drag it into a slot."
+
+[node name="GliderCard" type="PanelContainer" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Skills" unique_id=356717408]
+layout_mode = 2
+
+[node name="GliderText" type="Label" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Skills/GliderCard" unique_id=1358888112]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "✦  GLIDER  ·  LOCKED
+Find it in a chest, then drag it into a slot."
 
 [node name="ComboCard" type="PanelContainer" parent="Overlay/Frame/Margin/Layout/Body/RightPanel/RightMargin/Tabs/Skills" unique_id=1661575504]
 layout_mode = 2

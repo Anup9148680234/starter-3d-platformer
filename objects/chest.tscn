@@ -11,7 +11,7 @@ size = Vector3(1, 1.8242188, 1)
 radius = 2.0
 
 [node name="Chest" type="Node3D" unique_id=176362975]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0, 0, 0)
 script = ExtResource("3_script")
 
 [node name="ClosedModel" parent="." unique_id=1765573769 instance=ExtResource("1_closed")]

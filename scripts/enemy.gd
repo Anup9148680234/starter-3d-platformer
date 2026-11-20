@@ -147,7 +147,7 @@ func _process_attack_hit():
 	attack_hit_applied = true
 	if is_instance_valid(target) and global_position.distance_to(target.global_position) <= attack_range + 0.25:
 		if target.has_method("take_damage"):
-			target.take_damage(attack_damage)
+			target.take_damage(attack_damage, self)
 
 func _update_animation():
 	if attack_active or hurt_active or is_dead:

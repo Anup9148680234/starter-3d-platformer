@@ -1,6 +1,18 @@
 extends Node3D
 
-@export var reward_item_id: StringName = &"sword"
+const ITEM_CATALOG = preload("res://scripts/item_catalog.gd")
+
+@export_enum(
+	"Coin:gold_coin",
+	"Combo Punch:combo_punch",
+	"Sword Regular Combo:sword_regular_combo",
+	"Sword Heavy Combo:sword_heavy_combo",
+	"Double Jump:double_jump",
+	"Sword:sword",
+	"Glider:glider",
+	"Jetpack:jetpack",
+	"Health Potion:health_potion"
+) var reward_item_id := "sword"
 @export_range(1, 99, 1) var reward_quantity: int = 1
 
 @onready var closed_model: Node3D = $ClosedModel
@@ -10,6 +22,7 @@ var interaction_prompt: Sprite3D
 
 var _player_in_range := false
 var _is_open := false
+var _interaction_pending := false
 var _nearby_player: CharacterBody3D
 
 
@@ -80,15 +93,37 @@ func _create_interaction_prompt() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _is_open or not _player_in_range or get_tree().paused:
+	if _is_open or _interaction_pending or not _player_in_range or get_tree().paused:
 		return
 	if not is_instance_valid(_nearby_player) or not _nearby_player.is_on_floor():
 		return
 	if event is InputEventKey:
 		var key := event as InputEventKey
 		if key.pressed and not key.echo and (key.physical_keycode == KEY_E or key.keycode == KEY_E):
-			open_chest()
+			if _nearby_player.has_method("begin_chest_pickup"):
+				var started: bool = _nearby_player.call("begin_chest_pickup", self)
+				if not started:
+					return
+				_interaction_pending = true
+				interaction_prompt.visible = false
+			else:
+				open_chest()
 			get_viewport().set_input_as_handled()
+
+
+func finish_pickup_animation(player: Node) -> void:
+	if not _interaction_pending or player != _nearby_player or _is_open:
+		return
+	_interaction_pending = false
+	open_chest()
+
+
+func cancel_pickup_animation(player: Node) -> void:
+	if player != _nearby_player or not _interaction_pending:
+		return
+	_interaction_pending = false
+	if _player_in_range and not _is_open:
+		interaction_prompt.visible = true
 
 
 func open_chest() -> void:
@@ -98,13 +133,21 @@ func open_chest() -> void:
 	closed_model.visible = false
 	opened_model.visible = true
 	interaction_prompt.visible = false
-	if is_instance_valid(_nearby_player) and reward_item_id != &"" and reward_quantity > 0:
-		_nearby_player.call("add_inventory_item", reward_item_id, reward_quantity)
+	# Older enum saves included the Inspector label (for example "Glider:glider").
+	var reward_id_text := reward_item_id.get_slice(":", 1) if reward_item_id.contains(":") else reward_item_id
+	var reward_id := StringName(reward_id_text.strip_edges().to_lower())
+	if is_instance_valid(_nearby_player) and ITEM_CATALOG.has_item(reward_id) and reward_quantity > 0:
+		if reward_id == &"gold_coin":
+			_nearby_player.call("collect_coin", reward_quantity)
+		else:
+			_nearby_player.call("add_inventory_item", reward_id, reward_quantity)
 		if has_node("/root/GameSave"):
 			GameSave.sync_player_inventory(
 				int(_nearby_player.get("coins")),
 				_nearby_player.get("inventory_items")
 			)
+	elif not ITEM_CATALOG.has_item(reward_id):
+		push_warning("Chest reward item '%s' is not registered in ItemCatalog." % reward_item_id)
 
 
 func _on_body_entered(body: Node3D) -> void:

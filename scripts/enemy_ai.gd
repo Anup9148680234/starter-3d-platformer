@@ -124,7 +124,7 @@ func _apply_attack_hit() -> void:
 		return
 	_attack_hit_applied = true
 	if is_instance_valid(_target) and global_position.distance_to(_target.global_position) <= attack_range + 0.35 and _target.has_method("take_damage"):
-		_target.take_damage(attack_strength)
+		_target.take_damage(attack_strength, self)
 
 func _on_animation_finished(anim_name: StringName) -> void:
 	if _dead and anim_name == _animation_names.get(&"die", &""):

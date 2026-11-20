@@ -38,7 +38,8 @@ func start_new_game() -> void:
 		"coins": 0,
 		"health": MAX_PLAYER_HEALTH,
 		"skin_index": 1,
-		"inventory_items": {},
+		"inventory_items": {"combo_punch": 1},
+		"ability_slots": [],
 	}
 	collected_coins_by_scene.clear()
 	pending_coins_by_scene.clear()
@@ -83,6 +84,8 @@ func load_slot(slot_id: String) -> bool:
 	player_snapshot = saved_player if saved_player is Dictionary else {}
 	global_coins = int(player_snapshot.get("coins", 0))
 	global_inventory_items = _deserialize_items(player_snapshot.get("inventory_items", {}))
+	if not global_inventory_items.has(&"combo_punch"):
+		global_inventory_items[&"combo_punch"] = 1
 	var collected: Variant = save_data.get("collected_coins_by_scene", {})
 	collected_coins_by_scene = collected if collected is Dictionary else {}
 	pending_coins_by_scene.clear()
@@ -211,9 +214,17 @@ func restore_player(player: CharacterBody3D) -> bool:
 	# The live global values may include pickups collected since that checkpoint.
 	global_coins = int(player_snapshot.get("coins", 0))
 	global_inventory_items = _deserialize_items(player_snapshot.get("inventory_items", {}))
+	if not global_inventory_items.has(&"combo_punch"):
+		global_inventory_items[&"combo_punch"] = 1
 	player.set("coins", global_coins)
 	player.set("health", clampi(int(player_snapshot.get("health", MAX_PLAYER_HEALTH)), 1, MAX_PLAYER_HEALTH))
 	player.set("inventory_items", global_inventory_items.duplicate(true))
+	var saved_ability_slots: Variant = player_snapshot.get("ability_slots", [])
+	for slot_index in range(5):
+		var ability_id := &""
+		if saved_ability_slots is Array and slot_index < saved_ability_slots.size():
+			ability_id = StringName(str(saved_ability_slots[slot_index]))
+		player.call("set_ability_slot", slot_index, ability_id)
 	player.set("is_dead", false)
 	player.set("reaction_active", false)
 	player.set("attack_active", false)
@@ -222,7 +233,7 @@ func restore_player(player: CharacterBody3D) -> bool:
 	player.set("combo_step", -1)
 	player.set("combo_input_buffered", false)
 	player.set("jump_single", true)
-	player.set("jump_double", true)
+	player.set("jump_double", player.call("has_ability_equipped", &"double_jump"))
 	player.set("gravity", 0.0)
 	player.call("apply_skin", int(player_snapshot.get("skin_index", player.get("starting_skin"))))
 	player.emit_signal("coin_collected", player.get("coins"))
@@ -300,6 +311,10 @@ func _commit_pending_coins() -> void:
 func _capture_player(player: Node) -> Dictionary:
 	var items: Dictionary = {}
 	var inventory: Dictionary = player.get("inventory_items")
+	var serialized_ability_slots: Array[String] = []
+	var ability_slots: Array = player.get("equipped_ability_slots")
+	for ability_id in ability_slots:
+		serialized_ability_slots.append(String(ability_id))
 	global_coins = int(player.get("coins"))
 	global_inventory_items = _deserialize_items(inventory)
 	for item_id in inventory:
@@ -309,6 +324,7 @@ func _capture_player(player: Node) -> Dictionary:
 		"health": int(player.get("health")),
 		"skin_index": int(player.get("current_skin_index")),
 		"inventory_items": items,
+		"ability_slots": serialized_ability_slots,
 	}
 
 

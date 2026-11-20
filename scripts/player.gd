@@ -1,9 +1,12 @@
 extends CharacterBody3D
 
+const ITEM_CATALOG = preload("res://scripts/item_catalog.gd")
+
 signal coin_collected(total_coins: int)
 signal health_changed(current_health: int, maximum_health: int)
 signal inventory_changed(items: Dictionary)
 signal item_picked_up(item_id: StringName, quantity: int)
+signal ability_slots_changed(slots: Array)
 
 const ATTACK_ANIMATIONS: Array[StringName] = [&"PunchJab", &"PunchCross", &"PunchJab", &"PunchCross"]
 const ATTACK_SOURCE_ANIMATIONS := {
@@ -11,6 +14,11 @@ const ATTACK_SOURCE_ANIMATIONS := {
 	&"PunchCross": &"UAL/Punch_Cross",
 	&"SwordIdle": &"UAL/Sword_Idle",
 	&"SwordAttack": &"UAL/Sword_Attack",
+	&"SwordRegularA": &"UAL/Sword_Regular_A",
+	&"SwordRegularB": &"UAL/Sword_Regular_B",
+	&"SwordRegularCombo": &"UAL/Sword_Regular_Combo",
+	&"SwordHeavyCombo": &"UAL/Sword_Heavy_Combo",
+	&"SwordBlock": &"UAL/Sword_Block",
 }
 const MAX_HEALTH := 100
 const PUNCH_DAMAGE := 20
@@ -29,12 +37,28 @@ const UAL_HIT: StringName = &"UAL/Hit_Chest"
 const UAL_DEATH: StringName = &"UAL/Death01"
 const UAL_SWORD_ATTACK: StringName = &"UAL/Sword_Attack"
 const UAL_SWORD_IDLE: StringName = &"UAL/Sword_Idle"
+const UAL_SWORD_HEAVY_COMBO: StringName = &"UAL/Sword_Heavy_Combo"
+const HEAVY_COMBO_LUNGE_DURATION := 0.45
+const HEAVY_COMBO_LUNGE_DISTANCE := 0.3
+const SWORD_BUFFER_MAX_WINDOW := 0.24
+const SWORD_BUFFER_EXPIRY_PAD := 0.04
+const SWORD_HIT_REACH := 2.35
+const SWORD_REGULAR_DAMAGE := 28
+const SWORD_REGULAR_COMBO_DAMAGE := 20
+const SWORD_HEAVY_COMBO_DAMAGE := 27
+const SWORD_BLOCK_DAMAGE_MULTIPLIER := 0.2
+const SWORD_BLOCK_ARC_DOT := 0.25
 const JUMP_START_BLEND_TIME := 0.28
 const GLIDER_GRAVITY := 8.0
 const GLIDER_MAX_FALL_SPEED := 2.8
 const GLIDER_DEPLOY_DECELERATION := 20.0
 const GLIDER_FORWARD_SPEED := 4.0
 const GLIDER_ANIMATION_NAME: StringName = &"UAL/Jump_Loop"
+const SWORD_BLOCK_ANIMATION: StringName = &"SwordBlock"
+const SWORD_BLOCK_HOLD_TIME := 0.64
+const SWORD_BLOCK_IDLE_ANIMATION: StringName = &"block_idle"
+const CHEST_PICKUP_ANIMATION: StringName = &"UAL/Fixing_Kneeling"
+const CHEST_PICKUP_ANIMATION_SPEED := 1.5
 
 @export_subgroup("Components")
 @export var view: Node3D
@@ -49,9 +73,10 @@ var movement_velocity := Vector3.ZERO
 var rotation_direction := 0.0
 var gravity := 0.0
 var jump_single := true
-var jump_double := true
+var jump_double := false
 var coins := 0
-var inventory_items: Dictionary = {}
+var inventory_items: Dictionary = {&"combo_punch": 1}
+var equipped_ability_slots: Array[StringName] = [&"", &"", &"", &"", &""]
 var current_skin_index := -1
 var health := MAX_HEALTH
 var is_dead := false
@@ -61,6 +86,17 @@ var is_rolling := false
 var is_gliding := false
 var sword_attack_active := false
 var sword_mode_active := false
+var next_sword_regular_is_b := false
+var queued_sword_attack: StringName = &""
+var current_sword_attack: StringName = &""
+var sword_attack_buffer_remaining := 0.0
+var sword_hit_thresholds: Array[float] = []
+var sword_hit_index := 0
+var heavy_combo_lunge_started := false
+var heavy_combo_lunge_remaining := 0.0
+var sword_block_active := false
+var sword_block_pose_held := false
+var sword_block_releasing := false
 var jump_start_active := false
 var jump_start_time_remaining := 0.0
 var roll_move_time_remaining := 0.0
@@ -69,6 +105,7 @@ var roll_start_yaw := 0.0
 var combo_step := -1
 var combo_input_buffered := false
 var attack_hit_applied := false
+var interacting_chest: Node3D
 var upper_body_animation: AnimationPlayer
 var _base_materials: Dictionary = {}
 
@@ -162,6 +199,10 @@ func _setup_upper_body_attacks() -> void:
 		if clip.get_track_count() > 0:
 			clip.loop_mode = Animation.LOOP_LINEAR if attack_name == &"SwordIdle" else Animation.LOOP_NONE
 			upper_library.add_animation(attack_name, clip)
+			if attack_name == &"SwordBlock":
+				var block_idle := _make_static_pose_animation(clip, SWORD_BLOCK_HOLD_TIME)
+				if block_idle != null:
+					upper_library.add_animation(SWORD_BLOCK_IDLE_ANIMATION, block_idle)
 	upper_body_animation.add_animation_library(&"", upper_library)
 	model.add_child(upper_body_animation)
 	upper_body_animation.animation_finished.connect(_on_animation_finished)
@@ -177,20 +218,61 @@ func _setup_rocket_jetpack() -> void:
 	else:
 		push_warning("Glide flame node 'left_flame' was not found in the character scene.")
 
+
+func _make_static_pose_animation(source: Animation, sample_time: float) -> Animation:
+	var pose := source.duplicate(true) as Animation
+	if pose == null:
+		return null
+	pose.resource_name = "block_idle"
+	pose.length = SWORD_BLOCK_HOLD_TIME
+	pose.loop_mode = Animation.LOOP_LINEAR
+	for track_index in range(pose.get_track_count()):
+		var track_type := pose.track_get_type(track_index)
+		var sampled_value: Variant
+		match track_type:
+			Animation.TYPE_POSITION_3D:
+				sampled_value = source.position_track_interpolate(track_index, sample_time)
+			Animation.TYPE_ROTATION_3D:
+				sampled_value = source.rotation_track_interpolate(track_index, sample_time)
+			Animation.TYPE_SCALE_3D:
+				sampled_value = source.scale_track_interpolate(track_index, sample_time)
+			Animation.TYPE_VALUE:
+				sampled_value = source.value_track_interpolate(track_index, sample_time)
+			_:
+				continue
+		for key_index in range(pose.track_get_key_count(track_index) - 1, -1, -1):
+			pose.track_remove_key(track_index, key_index)
+		pose.track_set_interpolation_type(track_index, Animation.INTERPOLATION_LINEAR)
+		pose.track_insert_key(track_index, 0.0, sampled_value)
+		pose.track_insert_key(track_index, SWORD_BLOCK_HOLD_TIME, sampled_value)
+	return pose
+
 func _input(event: InputEvent) -> void:
 	if get_tree().paused or is_dead:
+		return
+	if event is InputEventMouseButton:
+		var mouse_event := event as InputEventMouseButton
+		if mouse_event.button_index == MOUSE_BUTTON_RIGHT:
+			if mouse_event.pressed:
+				_start_sword_block()
+			else:
+				_release_sword_block()
+			get_viewport().set_input_as_handled()
 		return
 	if event is InputEventKey:
 		var key := event as InputEventKey
 		if key.pressed and not key.echo and (key.physical_keycode == KEY_E or key.keycode == KEY_E):
-			_try_start_glide()
+			if has_ability_equipped(&"glider"):
+				_try_start_glide()
 		elif key.pressed and not key.echo and (key.physical_keycode == KEY_F or key.keycode == KEY_F):
-			_toggle_sword_mode()
+			if has_ability_equipped(&"sword"):
+				_toggle_sword_mode()
 
 func _toggle_sword_mode() -> void:
-	if is_dead or sword_attack_active or reaction_active:
-
+	if not has_ability_equipped(&"sword") or is_dead or reaction_active:
 		return
+	_cancel_sword_attack()
+	_cancel_sword_block()
 	sword_mode_active = not sword_mode_active
 	if sword != null:
 		sword.visible = sword_mode_active
@@ -204,13 +286,253 @@ func _toggle_sword_mode() -> void:
 			upper_body_animation.stop(true)
 
 func _try_play_sword_attack() -> void:
-	if sword_attack_active or is_dead or attack_active or reaction_active or not is_on_floor():
+	if _sword_block_is_active() or is_dead or attack_active or reaction_active or not is_on_floor():
 		return
-	if not upper_body_animation.has_animation(&"SwordAttack"):
+	if sword_attack_active:
+		_queue_sword_attack_from_input()
 		return
+	if Input.is_key_pressed(KEY_SHIFT) and _owns_item(&"sword_heavy_combo"):
+		_play_sword_attack(&"SwordHeavyCombo")
+	else:
+		var regular_attack: StringName = &"SwordRegularB" if next_sword_regular_is_b else &"SwordRegularA"
+		_play_sword_attack(regular_attack)
+
+
+func _queue_sword_attack_from_input() -> void:
+	var active_player := animation if current_sword_attack == &"SwordHeavyCombo" else upper_body_animation
+	if not is_instance_valid(active_player) or not active_player.is_playing():
+		return
+	var clip_length := maxf(active_player.current_animation_length, 0.001)
+	var progress := active_player.current_animation_position / clip_length
+	var chain_start := maxf(0.45, 1.0 - minf(SWORD_BUFFER_MAX_WINDOW / clip_length, 0.55))
+	if progress < chain_start or progress > 0.98:
+		return
+	if Input.is_key_pressed(KEY_SHIFT) and _owns_item(&"sword_heavy_combo"):
+		queued_sword_attack = &"SwordHeavyCombo"
+	elif current_sword_attack in [&"SwordRegularA", &"SwordRegularB"] and _owns_item(&"sword_regular_combo"):
+		queued_sword_attack = &"SwordRegularCombo"
+	else:
+		queued_sword_attack = &"SwordRegularB" if next_sword_regular_is_b else &"SwordRegularA"
+	sword_attack_buffer_remaining = minf(clip_length * (1.0 - progress) + SWORD_BUFFER_EXPIRY_PAD, SWORD_BUFFER_MAX_WINDOW + SWORD_BUFFER_EXPIRY_PAD)
+
+
+func _update_sword_attack_buffer(delta: float) -> void:
+	if queued_sword_attack == &"":
+		return
+	sword_attack_buffer_remaining = maxf(sword_attack_buffer_remaining - delta, 0.0)
+	if sword_attack_buffer_remaining <= 0.0:
+		queued_sword_attack = &""
+
+
+func _play_sword_attack(animation_name: StringName) -> void:
+	var is_heavy_combo := animation_name == &"SwordHeavyCombo"
+	if is_heavy_combo:
+		var heavy_clip := _resolve_animation_name(UAL_SWORD_HEAVY_COMBO)
+		if heavy_clip == &"":
+			push_warning("Heavy sword combo animation is missing from the character animation player.")
+			return
+		upper_body_animation.stop(true)
+		animation.speed_scale = 1.0
+		animation.play(heavy_clip, 0.05)
+		heavy_combo_lunge_started = false
+		heavy_combo_lunge_remaining = 0.0
+		movement_velocity = Vector3.ZERO
+	else:
+		if not upper_body_animation.has_animation(animation_name):
+			push_warning("Sword animation is missing: %s" % animation_name)
+			return
+		upper_body_animation.play(animation_name, 0.05)
 	sword_attack_active = true
-	_cancel_upper_body_attack()
-	upper_body_animation.play(&"SwordAttack", 0.05)
+	current_sword_attack = animation_name
+	queued_sword_attack = &""
+	sword_attack_buffer_remaining = 0.0
+	sword_hit_index = 0
+	match animation_name:
+		&"SwordRegularA":
+			next_sword_regular_is_b = true
+			sword_hit_thresholds = [0.52]
+		&"SwordRegularB":
+			next_sword_regular_is_b = false
+			sword_hit_thresholds = [0.50]
+		&"SwordRegularCombo":
+			sword_hit_thresholds = [0.24, 0.52, 0.80]
+		&"SwordHeavyCombo":
+			sword_hit_thresholds = [0.22, 0.48, 0.73, 0.90]
+		_:
+			sword_hit_thresholds = [0.5]
+
+
+func _owns_item(item_id: StringName) -> bool:
+	return int(inventory_items.get(item_id, 0)) > 0
+
+
+func _cancel_sword_attack() -> void:
+	var attack_clips: Array[StringName] = [&"SwordAttack", &"SwordRegularA", &"SwordRegularB", &"SwordRegularCombo", &"SwordHeavyCombo"]
+	var upper_attack_playing := is_instance_valid(upper_body_animation) and upper_body_animation.current_animation in attack_clips
+	var heavy_clip := _resolve_animation_name(UAL_SWORD_HEAVY_COMBO)
+	var full_body_attack_playing := is_instance_valid(animation) and heavy_clip != &"" and animation.current_animation == heavy_clip
+	if not sword_attack_active and current_sword_attack == &"" and not upper_attack_playing and not full_body_attack_playing:
+		return
+	var heavy_attack := current_sword_attack == &"SwordHeavyCombo" or full_body_attack_playing
+	sword_attack_active = false
+	current_sword_attack = &""
+	queued_sword_attack = &""
+	sword_attack_buffer_remaining = 0.0
+	sword_hit_thresholds.clear()
+	sword_hit_index = 0
+	heavy_combo_lunge_started = false
+	heavy_combo_lunge_remaining = 0.0
+	if heavy_attack and is_instance_valid(animation):
+		animation.stop(true)
+	if (not heavy_attack or upper_attack_playing) and is_instance_valid(upper_body_animation):
+		upper_body_animation.stop(true)
+	if sword_mode_active and not is_dead and is_instance_valid(upper_body_animation) and upper_body_animation.has_animation(&"SwordIdle"):
+		upper_body_animation.play(&"SwordIdle", 0.1)
+
+
+func _process_sword_hits() -> void:
+	if not sword_attack_active or sword_hit_index >= sword_hit_thresholds.size():
+		return
+	var active_player := animation if current_sword_attack == &"SwordHeavyCombo" else upper_body_animation
+	if not is_instance_valid(active_player) or not active_player.is_playing():
+		return
+	var clip_length := maxf(active_player.current_animation_length, 0.001)
+	var progress := active_player.current_animation_position / clip_length
+	while sword_hit_index < sword_hit_thresholds.size() and progress >= sword_hit_thresholds[sword_hit_index]:
+		_apply_sword_hit()
+		sword_hit_index += 1
+
+
+func _apply_sword_hit() -> void:
+	var damage := SWORD_REGULAR_DAMAGE
+	if current_sword_attack == &"SwordRegularCombo":
+		damage = SWORD_REGULAR_COMBO_DAMAGE
+	elif current_sword_attack == &"SwordHeavyCombo":
+		damage = SWORD_HEAVY_COMBO_DAMAGE
+	var forward := Vector3(sin(rotation.y), 0.0, cos(rotation.y))
+	var origin := global_position + Vector3.UP * 0.75
+	for enemy in get_tree().get_nodes_in_group("enemy"):
+		if not is_instance_valid(enemy) or not enemy.has_method("take_damage"):
+			continue
+		var offset: Vector3 = enemy.global_position - origin
+		var horizontal := Vector3(offset.x, 0.0, offset.z)
+		var distance := horizontal.length()
+		if distance > SWORD_HIT_REACH or absf(offset.y) > 1.6:
+			continue
+		if distance > 0.01 and forward.dot(horizontal / distance) < 0.05:
+			continue
+		enemy.take_damage(damage)
+
+
+func _is_sword_guarding_source(source: Node3D) -> bool:
+	if not sword_mode_active or not (sword_block_active or sword_block_pose_held) or not is_instance_valid(source):
+		return false
+	var to_attacker := source.global_position - global_position
+	to_attacker.y = 0.0
+	if to_attacker.length_squared() < 0.0001:
+		return true
+	var forward := Vector3(sin(rotation.y), 0.0, cos(rotation.y))
+	return forward.dot(to_attacker.normalized()) >= SWORD_BLOCK_ARC_DOT
+
+
+func _apply_heavy_combo_lunge(delta: float) -> void:
+	if current_sword_attack != &"SwordHeavyCombo" or delta <= 0.0:
+		return
+	var heavy_clip := _resolve_animation_name(UAL_SWORD_HEAVY_COMBO)
+	if heavy_clip == &"" or animation.current_animation != heavy_clip or not animation.is_playing():
+		return
+	var clip_length := animation.current_animation_length
+	var lunge_start := maxf(clip_length - HEAVY_COMBO_LUNGE_DURATION, 0.0)
+	if not heavy_combo_lunge_started and animation.current_animation_position >= lunge_start:
+		heavy_combo_lunge_started = true
+		heavy_combo_lunge_remaining = minf(HEAVY_COMBO_LUNGE_DURATION, clip_length - animation.current_animation_position)
+	if not heavy_combo_lunge_started or heavy_combo_lunge_remaining <= 0.0:
+		return
+	var active_step := minf(delta, heavy_combo_lunge_remaining)
+	var speed := HEAVY_COMBO_LUNGE_DISTANCE / HEAVY_COMBO_LUNGE_DURATION
+	var forward := Vector3(sin(rotation.y), 0.0, cos(rotation.y))
+	var applied_velocity := speed * active_step / delta
+	velocity.x = forward.x * applied_velocity
+	velocity.z = forward.z * applied_velocity
+	heavy_combo_lunge_remaining = maxf(heavy_combo_lunge_remaining - active_step, 0.0)
+
+
+func _start_sword_block() -> void:
+	if not sword_mode_active or not is_on_floor() or is_dead or attack_active or sword_attack_active or reaction_active or is_rolling or is_gliding:
+		return
+	if sword_block_releasing and upper_body_animation.current_animation == SWORD_BLOCK_ANIMATION:
+		# Reverse direction immediately from the current pose if RMB is pressed
+		# again before the release animation has finished.
+		var resume_at := upper_body_animation.current_animation_position
+		sword_block_active = true
+		sword_block_pose_held = false
+		sword_block_releasing = false
+		upper_body_animation.play(SWORD_BLOCK_ANIMATION, 0.0, 1.0)
+		upper_body_animation.seek(resume_at, true)
+		return
+	if _sword_block_is_active():
+		return
+	if not upper_body_animation.has_animation(SWORD_BLOCK_ANIMATION):
+		push_warning("Sword block animation is missing from the upper-body animation library.")
+		return
+	if not upper_body_animation.has_animation(SWORD_BLOCK_IDLE_ANIMATION):
+		push_warning("Static block_idle pose could not be created from Sword_Block.")
+		return
+	sword_block_active = true
+	sword_block_pose_held = false
+	sword_block_releasing = false
+	upper_body_animation.play(SWORD_BLOCK_ANIMATION, 0.06)
+
+
+func _release_sword_block() -> void:
+	if not _sword_block_is_active():
+		return
+	var reverse_from := SWORD_BLOCK_HOLD_TIME
+	if not sword_block_pose_held and upper_body_animation.current_animation == SWORD_BLOCK_ANIMATION:
+		reverse_from = minf(upper_body_animation.current_animation_position, SWORD_BLOCK_HOLD_TIME)
+	sword_block_active = false
+	sword_block_pose_held = false
+	sword_block_releasing = true
+	upper_body_animation.play(SWORD_BLOCK_ANIMATION, 0.04, -1.0)
+	upper_body_animation.seek(reverse_from, true)
+
+
+func _update_sword_block(_delta: float) -> void:
+	if not _sword_block_is_active() or not is_instance_valid(upper_body_animation):
+		return
+	if sword_block_active and not Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
+		_release_sword_block()
+	if sword_block_active and not sword_block_pose_held and upper_body_animation.current_animation == SWORD_BLOCK_ANIMATION:
+		if upper_body_animation.current_animation_position >= SWORD_BLOCK_HOLD_TIME:
+			if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
+				upper_body_animation.seek(SWORD_BLOCK_HOLD_TIME, true)
+				sword_block_pose_held = true
+				sword_block_active = false
+				upper_body_animation.play(SWORD_BLOCK_IDLE_ANIMATION, 0.0)
+			else:
+				_release_sword_block()
+
+
+func _finish_sword_block() -> void:
+	sword_block_active = false
+	sword_block_pose_held = false
+	sword_block_releasing = false
+	if sword_mode_active and not is_dead and upper_body_animation.has_animation(&"SwordIdle"):
+		upper_body_animation.play(&"SwordIdle", 0.12)
+
+
+func _sword_block_is_active() -> bool:
+	return sword_block_active or sword_block_pose_held or sword_block_releasing
+
+
+func _cancel_sword_block() -> void:
+	sword_block_active = false
+	sword_block_pose_held = false
+	sword_block_releasing = false
+	if is_instance_valid(upper_body_animation) and upper_body_animation.current_animation in [SWORD_BLOCK_ANIMATION, SWORD_BLOCK_IDLE_ANIMATION]:
+		upper_body_animation.stop(true)
+		if sword_mode_active and not is_dead and upper_body_animation.has_animation(&"SwordIdle"):
+			upper_body_animation.play(&"SwordIdle", 0.1)
 
 func _physics_process(delta: float) -> void:
 	if is_dead:
@@ -220,6 +542,8 @@ func _physics_process(delta: float) -> void:
 		if roll_move_time_remaining <= 0.0:
 			is_rolling = false
 	var was_on_floor := is_on_floor()
+	_update_sword_block(delta)
+	_update_sword_attack_buffer(delta)
 	handle_controls(delta)
 	if jump_start_active:
 		jump_start_time_remaining = maxf(jump_start_time_remaining - delta, 0.0)
@@ -243,10 +567,12 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity = velocity.lerp(movement_velocity, delta * 10.0)
 		velocity.y = -gravity
+	_apply_heavy_combo_lunge(delta)
 	move_and_slide()
 	if is_gliding and is_on_floor():
 		_set_gliding(false)
 	process_punch_hit()
+	_process_sword_hits()
 	if is_rolling:
 		rotation.y = roll_start_yaw
 	elif Vector2(velocity.x, velocity.z).length() > 0.05:
@@ -268,7 +594,7 @@ func _physics_process(delta: float) -> void:
 		jump_start_active = false
 		jump_start_time_remaining = 0.0
 		jump_single = true
-		jump_double = true
+		jump_double = has_ability_equipped(&"double_jump")
 		animation.speed_scale = 1.0
 		_play_base_animation(UAL_JUMP_LAND, &"", &"", 2.5)
 		Audio.play("res://sounds/land.ogg")
@@ -289,7 +615,7 @@ func handle_controls(delta: float) -> void:
 	var roll_requested := Input.is_action_just_pressed("roll") or (Input.is_action_pressed("roll") and moved)
 	if roll_requested and not input.is_zero_approx():
 		try_start_roll(Vector2(input.x, input.z), world_input)
-	if Input.is_action_just_pressed("attack"):
+	if Input.is_action_just_pressed("attack") and not _sword_block_is_active():
 		if sword_mode_active:
 			_try_play_sword_attack()
 		elif attack_active:
@@ -299,6 +625,8 @@ func handle_controls(delta: float) -> void:
 		elif is_on_floor():
 			start_attack(0)
 	if Input.is_action_just_pressed("jump") and (jump_single or jump_double):
+		_cancel_sword_attack()
+		_cancel_sword_block()
 		_cancel_upper_body_attack()
 		reaction_active = false
 		jump()
@@ -321,6 +649,8 @@ func handle_effects(delta: float) -> void:
 	if sound_footsteps != null:
 		sound_footsteps.stream_paused = true
 	if reaction_active or is_dead or is_rolling:
+		return
+	if current_sword_attack == &"SwordHeavyCombo" and animation.current_animation == _resolve_animation_name(UAL_SWORD_HEAVY_COMBO) and animation.is_playing():
 		return
 	var jump_start := _resolve_animation_name(UAL_JUMP_START)
 	if jump_start_active and animation.current_animation == jump_start and animation.is_playing():
@@ -414,6 +744,8 @@ func try_start_roll(direction: Vector2, world_direction: Vector3) -> void:
 	var roll_vector := Vector3(world_direction.x, 0.0, world_direction.z)
 	if roll_vector.is_zero_approx():
 		return
+	_cancel_sword_attack()
+	_cancel_sword_block()
 	is_rolling = true
 	roll_move_time_remaining = ROLL_DURATION
 	roll_world_direction = roll_vector.normalized()
@@ -425,13 +757,34 @@ func try_start_roll(direction: Vector2, world_direction: Vector3) -> void:
 		animation.play(resolved, 0.05, 2.0)
 
 func _on_animation_finished(animation_name: StringName) -> void:
+	if animation_name == _resolve_animation_name(CHEST_PICKUP_ANIMATION):
+		animation.speed_scale = 1.0
+		reaction_active = false
+		var chest := interacting_chest
+		interacting_chest = null
+		if is_instance_valid(chest) and chest.has_method("finish_pickup_animation"):
+			chest.call("finish_pickup_animation", self)
+		return
 	if animation_name == _resolve_animation_name(UAL_JUMP_LAND):
 		animation.speed_scale = 1.0
 		return
-	if animation_name == &"SwordAttack":
+	if animation_name in [&"SwordAttack", &"SwordRegularA", &"SwordRegularB", &"SwordRegularCombo", &"SwordHeavyCombo"] or animation_name == _resolve_animation_name(UAL_SWORD_HEAVY_COMBO):
 		sword_attack_active = false
-		if sword_mode_active and not is_dead:
+		current_sword_attack = &""
+		heavy_combo_lunge_started = false
+		heavy_combo_lunge_remaining = 0.0
+		if queued_sword_attack != &"" and sword_attack_buffer_remaining > 0.0 and sword_mode_active and not is_dead:
+			var queued_attack := queued_sword_attack
+			queued_sword_attack = &""
+			sword_attack_buffer_remaining = 0.0
+			_play_sword_attack(queued_attack)
+		elif sword_mode_active and not is_dead:
+			queued_sword_attack = &""
+			sword_attack_buffer_remaining = 0.0
 			upper_body_animation.play(&"SwordIdle", 0.12)
+		return
+	if animation_name == SWORD_BLOCK_ANIMATION:
+		_finish_sword_block()
 		return
 	if ATTACK_ANIMATIONS.has(animation_name):
 		if combo_step == 2 and is_on_floor():
@@ -454,14 +807,20 @@ func _on_animation_finished(animation_name: StringName) -> void:
 	elif is_dead and animation_name == _resolve_animation_name(UAL_DEATH):
 		GameSave.show_you_died_screen()
 
-func take_damage(amount: int) -> void:
+func take_damage(amount: int, source: Node3D = null) -> void:
 	if is_dead or amount <= 0:
 		return
-	sword_attack_active = false
+	_cancel_chest_pickup()
+	var guarded := _is_sword_guarding_source(source)
+	var applied_damage := maxi(roundi(float(amount) * SWORD_BLOCK_DAMAGE_MULTIPLIER), 1) if guarded else amount
+	health = maxi(health - applied_damage, 0)
+	health_changed.emit(health, MAX_HEALTH)
+	if guarded and health > 0:
+		return
+	_cancel_sword_block()
+	_cancel_sword_attack()
 	jump_start_active = false
 	jump_start_time_remaining = 0.0
-	health = maxi(health - amount, 0)
-	health_changed.emit(health, MAX_HEALTH)
 	_cancel_upper_body_attack()
 	_set_gliding(false)
 	is_rolling = false
@@ -470,6 +829,8 @@ func take_damage(amount: int) -> void:
 	if health == 0:
 		is_dead = true
 		sword_attack_active = false
+		queued_sword_attack = &""
+		current_sword_attack = &""
 		GameSave.begin_player_death()
 		reaction_active = false
 		movement_velocity = Vector3.ZERO
@@ -480,6 +841,8 @@ func take_damage(amount: int) -> void:
 			GameSave.show_you_died_screen()
 	else:
 		sword_attack_active = false
+		queued_sword_attack = &""
+		current_sword_attack = &""
 		reaction_active = true
 		var hit := _resolve_animation_name(UAL_HIT)
 		if hit != &"":
@@ -521,11 +884,7 @@ func apply_skin(index: int) -> void:
 func _set_gliding(active: bool) -> void:
 	is_gliding = active
 	if not active and sword_attack_active:
-		sword_attack_active = false
-		if is_instance_valid(upper_body_animation) and upper_body_animation.current_animation == &"SwordAttack":
-			upper_body_animation.stop(true)
-		if sword_mode_active and is_instance_valid(upper_body_animation) and upper_body_animation.has_animation(&"SwordIdle"):
-			upper_body_animation.play(&"SwordIdle", 0.12)
+		_cancel_sword_attack()
 	if rocket_pack != null:
 		rocket_pack.visible = active
 	if glide_flame != null:
@@ -553,7 +912,7 @@ func _set_glide_flame_emitting(active: bool) -> void:
 			audio.stop()
 
 func _try_start_glide() -> void:
-	if is_gliding or is_on_floor() or is_dead or attack_active or sword_attack_active or reaction_active or is_rolling:
+	if not has_ability_equipped(&"glider") or is_gliding or is_on_floor() or is_dead or attack_active or sword_attack_active or reaction_active or is_rolling or _sword_block_is_active():
 		return
 	var height := 1.0
 	var collider := get_node_or_null("Collider") as CollisionShape3D
@@ -588,6 +947,65 @@ func add_inventory_item(item_id: StringName, quantity: int = 1) -> void:
 	inventory_changed.emit(inventory_items.duplicate(true))
 	item_picked_up.emit(item_id, quantity)
 
+func begin_chest_pickup(chest: Node3D) -> bool:
+	if not is_instance_valid(chest) or not is_on_floor() or is_dead or reaction_active or attack_active or sword_attack_active or is_rolling or is_gliding:
+		return false
+	var pickup_animation := _resolve_animation_name(CHEST_PICKUP_ANIMATION)
+	if pickup_animation == &"":
+		push_warning("Chest pickup animation not found: %s" % CHEST_PICKUP_ANIMATION)
+		return false
+	_cancel_upper_body_attack()
+	interacting_chest = chest
+	reaction_active = true
+	jump_start_active = false
+	jump_start_time_remaining = 0.0
+	movement_velocity = Vector3.ZERO
+	velocity.x = 0.0
+	velocity.z = 0.0
+	animation.speed_scale = 1.0
+	animation.play(pickup_animation, 0.12, CHEST_PICKUP_ANIMATION_SPEED)
+	return true
+
+func _cancel_chest_pickup() -> void:
+	if is_instance_valid(interacting_chest) and interacting_chest.has_method("cancel_pickup_animation"):
+		interacting_chest.call("cancel_pickup_animation", self)
+	interacting_chest = null
+
+func has_ability_equipped(ability_id: StringName) -> bool:
+	for equipped_id in equipped_ability_slots:
+		if _normalize_ability_id(equipped_id) == _normalize_ability_id(ability_id):
+			return ability_id != &""
+	return false
+
+func set_ability_slot(slot_index: int, item_id: StringName) -> bool:
+	if slot_index < 0 or slot_index >= equipped_ability_slots.size():
+		return false
+	if item_id != &"" and (not _is_ability_item(item_id) or int(inventory_items.get(item_id, 0)) <= 0):
+		return false
+	if item_id != &"":
+		var normalized_id := _normalize_ability_id(item_id)
+		for index in range(equipped_ability_slots.size()):
+			if index != slot_index and _normalize_ability_id(equipped_ability_slots[index]) == normalized_id:
+				equipped_ability_slots[index] = &""
+	equipped_ability_slots[slot_index] = item_id
+	jump_double = has_ability_equipped(&"double_jump")
+	if sword_mode_active and not has_ability_equipped(&"sword"):
+		_cancel_sword_attack()
+		_cancel_sword_block()
+		sword_mode_active = false
+		if sword != null:
+			sword.visible = false
+		if is_instance_valid(upper_body_animation):
+			upper_body_animation.stop(true)
+	ability_slots_changed.emit(equipped_ability_slots.duplicate())
+	return true
+
+func _is_ability_item(item_id: StringName) -> bool:
+	return ITEM_CATALOG.is_ability(item_id)
+
+func _normalize_ability_id(item_id: StringName) -> StringName:
+	return ITEM_CATALOG.ability_for(item_id) if ITEM_CATALOG.is_ability(item_id) else item_id
+
 func spend_coins(amount: int) -> bool:
 	if amount <= 0 or coins < amount:
 		return false
@@ -614,6 +1032,6 @@ func jump() -> void:
 		_play_base_animation(UAL_JUMP_LOOP)
 	if jump_single:
 		jump_single = false
-		jump_double = true
+		jump_double = has_ability_equipped(&"double_jump")
 	else:
 		jump_double = false

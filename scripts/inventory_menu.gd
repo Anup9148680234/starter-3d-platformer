@@ -1,6 +1,9 @@
 extends CanvasLayer
 
 const ITEM_RARITY = preload("res://scripts/item_rarity.gd")
+const ITEM_CATALOG = preload("res://scripts/item_catalog.gd")
+const ITEM_DRAG_SCRIPT = preload("res://scripts/inventory_drag_item.gd")
+const ABILITY_SLOT_SCRIPT = preload("res://scripts/inventory_ability_slot.gd")
 const HEALTH_POTION_COST := 5
 
 @export var player_path: NodePath
@@ -16,6 +19,10 @@ var preview_base_materials: Dictionary = {}
 @onready var coin_count: Label = %CoinCount
 @onready var shop_status: Label = %ShopStatus
 @onready var buy_potion_button: Button = %BuyPotionButton
+@onready var ability_slots_container: HBoxContainer = %AbilitySlots
+@onready var double_jump_text: Label = %DoubleJumpText
+@onready var sword_text: Label = %SwordText
+@onready var glider_text: Label = %GliderText
 
 
 func _ready() -> void:
@@ -30,8 +37,11 @@ func _ready() -> void:
 		player.connect("coin_collected", _on_coin_collected)
 	if player.has_signal("health_changed"):
 		player.connect("health_changed", _on_health_changed)
+	if player.has_signal("ability_slots_changed"):
+		player.connect("ability_slots_changed", _on_ability_slots_changed)
 
 	_populate_outfits()
+	_build_ability_slots()
 	_start_preview_animation()
 	_refresh_inventory()
 	_update_shop()
@@ -152,17 +162,20 @@ func _refresh_inventory() -> void:
 		empty_label.custom_minimum_size = Vector2(320, 80)
 		empty_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		item_grid.add_child(empty_label)
+		_update_ability_status()
 		return
 
 	for key in items.keys():
 		var item_id: StringName = StringName(str(key))
 		var quantity: int = int(items[key])
 		item_grid.add_child(_make_item_card(item_id, quantity))
+	_update_ability_status()
 
 
 func _make_item_card(item_id: StringName, quantity: int) -> Control:
-	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(122, 142)
+	var card := ITEM_DRAG_SCRIPT.new() as PanelContainer
+	card.set("item_id", item_id)
+	card.custom_minimum_size = Vector2(122, 156 if ITEM_CATALOG.is_ability(item_id) else 142)
 	var rarity_color := ITEM_RARITY.color_for(item_id)
 	var card_style := StyleBoxFlat.new()
 	card_style.bg_color = Color(0.045, 0.055, 0.07, 0.96).lerp(rarity_color, 0.12)
@@ -178,16 +191,17 @@ func _make_item_card(item_id: StringName, quantity: int) -> Control:
 	content.alignment = BoxContainer.ALIGNMENT_CENTER
 	card.add_child(content)
 
-	if item_id == &"gold_coin":
+	var icon_texture := ITEM_CATALOG.icon_for(item_id)
+	if icon_texture != null:
 		var icon := TextureRect.new()
-		icon.texture = preload("res://sprites/coin.png")
+		icon.texture = icon_texture
 		icon.custom_minimum_size = Vector2(42, 42)
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		content.add_child(icon)
 	else:
 		var icon_label := Label.new()
-		icon_label.text = "✚" if item_id == &"health_potion" else "◆"
+		icon_label.text = "✊" if item_id == &"combo_punch" else "✚" if item_id == &"health_potion" else "◆"
 		icon_label.custom_minimum_size = Vector2(42, 42)
 		icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		icon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -212,12 +226,84 @@ func _make_item_card(item_id: StringName, quantity: int) -> Control:
 		use_button.text = "USE"
 		use_button.pressed.connect(_on_use_item_pressed.bind(item_id))
 		content.add_child(use_button)
+	elif ITEM_CATALOG.is_ability(item_id) and item_id in [&"sword", &"double_jump", &"glider", &"jetpack"]:
+		var equip_hint := Label.new()
+		equip_hint.text = "DRAG TO EQUIP"
+		equip_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		equip_hint.add_theme_font_size_override("font_size", 10)
+		equip_hint.add_theme_color_override("font_color", rarity_color)
+		content.add_child(equip_hint)
+	_set_drag_mouse_filter(content)
 	return card
 
 
+func _set_drag_mouse_filter(control: Control) -> void:
+	control.mouse_filter = Control.MOUSE_FILTER_PASS
+	for child in control.get_children():
+		if child is Button:
+			continue
+		if child is Control:
+			var child_control := child as Control
+			child_control.mouse_filter = Control.MOUSE_FILTER_PASS
+			_set_drag_mouse_filter(child_control)
+
+
+func _build_ability_slots() -> void:
+	for child in ability_slots_container.get_children():
+		child.queue_free()
+	for index in range(5):
+		var slot := ABILITY_SLOT_SCRIPT.new() as PanelContainer
+		slot.set("slot_index", index)
+		slot.tooltip_text = "Drag an ability here"
+		slot.connect("ability_dropped", _on_ability_slot_dropped)
+		slot.connect("ability_cleared", _on_ability_slot_cleared)
+		ability_slots_container.add_child(slot)
+	_update_ability_slots()
+
+
+func _update_ability_slots() -> void:
+	if ability_slots_container == null or player == null:
+		return
+	var equipped_slots: Array = player.get("equipped_ability_slots")
+	for index in range(mini(ability_slots_container.get_child_count(), equipped_slots.size())):
+		ability_slots_container.get_child(index).call("set_item_id", StringName(str(equipped_slots[index])))
+
+
+func _on_ability_slot_dropped(slot_index: int, item_id: StringName) -> void:
+	if player.call("set_ability_slot", slot_index, item_id):
+		_update_ability_slots()
+		_update_ability_status()
+
+
+func _on_ability_slot_cleared(slot_index: int) -> void:
+	if player.call("set_ability_slot", slot_index, &""):
+		_update_ability_slots()
+		_update_ability_status()
+
+
+func _on_ability_slots_changed(_slots: Array) -> void:
+	_update_ability_slots()
+	_update_ability_status()
+
+
+func _update_ability_status() -> void:
+	if player == null:
+		return
+	_update_ability_status_label(double_jump_text, &"double_jump", "DOUBLE JUMP")
+	_update_ability_status_label(sword_text, &"sword", "SWORD")
+	_update_ability_status_label(glider_text, &"glider", "GLIDER")
+
+
+func _update_ability_status_label(label: Label, ability_id: StringName, title: String) -> void:
+	var items: Dictionary = player.get("inventory_items")
+	var item_owned := int(items.get(ability_id, 0)) > 0 or (ability_id == &"glider" and int(items.get(&"jetpack", 0)) > 0)
+	var equipped := bool(player.call("has_ability_equipped", ability_id))
+	var state := "EQUIPPED" if equipped else "READY TO EQUIP" if item_owned else "LOCKED"
+	var instruction := "Drag into a slot to use." if item_owned else "Find this ability in a chest."
+	label.text = "✦  %s  ·  %s\n%s" % [title, state, instruction]
+
+
 func _item_display_name(item_id: StringName) -> String:
-	if item_id == &"gold_coin":
-		return "Gold Coin"
 	return ITEM_RARITY.display_name(item_id)
 
 
